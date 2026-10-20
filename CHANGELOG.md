@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `RequestQueue` validation of `maxConcurrent` (and `requestsPerSecond`) is now shared by the constructor and the underlying `QueueCore`, so a queue core can never be created with limits that stall the queue. Invalid values (0, negative, `NaN`, `Infinity`, fractions, non-numbers) throw a `RangeError` whose message includes the received value (closes #582).
 - `ReadCache` deserialization now validates the `__type` tag on `{ __type, value }` wrappers: only `bigint` and `date` are accepted, the `value` must be a string, and it must parse to a valid `BigInt`/`Date`. Anything else throws the new exported `CacheDeserializationError`. During hydration, malformed persisted entries are discarded (and removed from persistence) with a `console.warn` instead of being silently returned as raw objects (closes #581).
 - `InFlightTracker.trackIfPending()` now accepts an optional `clientId` parameter, matching `track()`. The client scope is included in the pending-check key and passed through when the operation is tracked, so multi-client deduplication no longer lets one client's pending operation affect another's (closes #580).
 - `getNetworkFeeStats()` now caches results per network passphrase rather than in a single global entry. If the connected wallet switches networks mid-session (e.g. Freighter toggled from testnet to mainnet), the cache is automatically flushed and fresh stats are fetched from the correct RPC endpoint (closes #500).
