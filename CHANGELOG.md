@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `InFlightTracker.trackIfPending()` now accepts an optional `clientId` parameter, matching `track()`. The client scope is included in the pending-check key and passed through when the operation is tracked, so multi-client deduplication no longer lets one client's pending operation affect another's (closes #580).
 - `getNetworkFeeStats()` now caches results per network passphrase rather than in a single global entry. If the connected wallet switches networks mid-session (e.g. Freighter toggled from testnet to mainnet), the cache is automatically flushed and fresh stats are fetched from the correct RPC endpoint (closes #500).
 - `Beneficiary` and `Will` interfaces in `src/types.ts` now carry JSDoc `@since` version tags and **Change history** tables so consumers can determine at a glance which SDK version introduced each field or breaking change (closes #501).
 - `WillStatus` enum members now carry `@since` tags indicating when each variant was introduced (closes #501).
