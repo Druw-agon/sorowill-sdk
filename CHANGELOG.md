@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unit tests for `cancelWill` `refundAmount` correctness, including the primary (contract-returned value) and fallback (pre-call `getWill` balance) paths; the known race with a concurrent `topUp` is documented as a known limitation (closes #118).
 - `MIGRATION.md` added to the repository root: documents every breaking change to public interfaces with before/after examples and step-by-step migration instructions (closes #501).
 - `flushFeeStatsCache()` method on `SoroWillClient` for manually invalidating the per-network fee-stats cache (closes #500).
+- `MIGRATION.md` now documents the upgrade path between versions: a step-by-step upgrade checklist, the versioning policy defining what counts as a breaking change, a per-version breaking-changes index, additive (no-action) changes in 0.1.1, and a template for future major-version sections. README gained an **Upgrading** section, and `MIGRATION.md` and `CHANGELOG.md` are now included in the published npm package (closes #579).
 
 ### Changed
 
