@@ -510,6 +510,7 @@ For applications that need custom signing logic (e.g. multi-sig, custom key deri
 | `LocalStorageCachePersistenceAdapter` | class | `cache` | Persistence adapter backed by `window.localStorage` |
 | `IndexedDbCachePersistenceAdapter` | class | `cache` | Persistence adapter backed by IndexedDB |
 | `createReadCacheKey` | function | `cache` | Builds a stable cache key from a method name and its arguments |
+| `CacheDeserializationError` | class | `cache` | Thrown when a persisted cache value has an unknown `__type` or an invalid tagged value; such entries are discarded during hydration |
 
 ### Hooks
 

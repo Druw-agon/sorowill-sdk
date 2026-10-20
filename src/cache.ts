@@ -47,21 +47,57 @@ function serializeCacheValue(value: unknown): string {
   });
 }
 
+/** The `__type` tags written by {@link serializeCacheValue}. */
+const KNOWN_CACHE_VALUE_TYPES: ReadonlySet<string> = new Set(['bigint', 'date']);
+
+/**
+ * Thrown when a persisted cache value cannot be deserialized, e.g. because a
+ * `{ __type, value }` wrapper carries an unknown `__type` (issue #581).
+ */
+export class CacheDeserializationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CacheDeserializationError';
+  }
+}
+
 function deserializeCacheValue<T>(value: string): T {
   return JSON.parse(value, (_key, currentValue) => {
     if (
       currentValue &&
       typeof currentValue === 'object' &&
       '__type' in currentValue &&
-      'value' in currentValue &&
-      typeof currentValue.value === 'string'
+      'value' in currentValue
     ) {
-      if (currentValue.__type === 'bigint') {
-        return BigInt(currentValue.value);
+      const type: unknown = currentValue.__type;
+      if (typeof type !== 'string' || !KNOWN_CACHE_VALUE_TYPES.has(type)) {
+        throw new CacheDeserializationError(
+          `Unknown cached value __type ${JSON.stringify(type)}; expected one of: ${[
+            ...KNOWN_CACHE_VALUE_TYPES,
+          ].join(', ')}`,
+        );
       }
-      if (currentValue.__type === 'date') {
-        return new Date(currentValue.value);
+      if (typeof currentValue.value !== 'string') {
+        throw new CacheDeserializationError(
+          `Cached ${type} value must be a string, received ${typeof currentValue.value}`,
+        );
       }
+      if (type === 'bigint') {
+        try {
+          return BigInt(currentValue.value);
+        } catch {
+          throw new CacheDeserializationError(
+            `Invalid cached bigint value ${JSON.stringify(currentValue.value)}`,
+          );
+        }
+      }
+      const date = new Date(currentValue.value);
+      if (Number.isNaN(date.getTime())) {
+        throw new CacheDeserializationError(
+          `Invalid cached date value ${JSON.stringify(currentValue.value)}`,
+        );
+      }
+      return date;
     }
     return currentValue;
   }) as T;
@@ -307,9 +343,25 @@ export class ReadCache {
         continue;
       }
 
+      let value: unknown;
+      try {
+        value = deserializeCacheValue(persistedEntry.value);
+      } catch (error) {
+        // A malformed entry must not break hydration of the rest of the
+        // cache. Drop it so it is re-fetched from the source of truth.
+        console.warn(
+          `ReadCache: discarding persisted entry "${persistedEntry.key}" that could not be deserialized:`,
+          error,
+        );
+        await this.persistence.delete(persistedEntry.key).catch(() => {
+          // Ignore persistence failures; the entry is already skipped in-memory.
+        });
+        continue;
+      }
+
       this.entries.set(persistedEntry.key, {
         key: persistedEntry.key,
-        value: deserializeCacheValue(persistedEntry.value),
+        value,
         expiresAt: persistedEntry.expiresAt,
         willIds: new Set(persistedEntry.willIds),
       });

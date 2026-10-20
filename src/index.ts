@@ -101,6 +101,7 @@ export type {
 } from './walletConnect';
 
 export {
+  CacheDeserializationError,
   IndexedDbCachePersistenceAdapter,
   LocalStorageCachePersistenceAdapter,
   MemoryCachePersistenceAdapter,
